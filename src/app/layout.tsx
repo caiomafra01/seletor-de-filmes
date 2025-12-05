@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Recomendador de Filmes por Vibe",
-  description: "Descubra filmes baseados no seu humor",
+  title: "CineVibe",
+  description: "Descubra novos filmes baseados em uma Categoria",
 };
 
 export const viewport: Viewport = {
