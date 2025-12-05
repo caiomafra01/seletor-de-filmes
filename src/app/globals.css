@@ -1,34 +1,46 @@
 @import "tailwindcss";
 @config "../../tailwind.config.ts";
 
-:root {
-  --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 10, 10, 15;
-  --background-end-rgb: 20, 20, 30;
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
-  min-height: 100vh;
-}
+@layer utilities {
+  .animate-in {
+    animation-duration: 700ms;
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    /* ease-out */
+    animation-fill-mode: forwards;
+    opacity: 0;
+    transform: translateY(2.5rem);
+    /* 10 * 0.25rem = 2.5rem */
+    animation-name: enter;
+  }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
+  @keyframes enter {
+    from {
+      opacity: 0;
+      transform: translateY(2.5rem);
+    }
 
-::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }

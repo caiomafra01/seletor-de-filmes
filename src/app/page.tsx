@@ -33,7 +33,14 @@ export default function Home() {
       if (data.results && data.results.length > 0) {
         // 3. Random Movie from the list
         const randomIndex = Math.floor(Math.random() * data.results.length);
-        setMovie(data.results[randomIndex]);
+        const basicMovie = data.results[randomIndex];
+
+        // 4. Fetch Detailed Info (Runtime & Providers)
+        const detailsUrl = `https://api.themoviedb.org/3/movie/${basicMovie.id}?api_key=${API_KEY}&language=pt-BR&append_to_response=watch/providers`;
+        const detailsResponse = await fetch(detailsUrl);
+        const detailedMovie = await detailsResponse.json();
+
+        setMovie(detailedMovie);
       } else {
         // SAFETY CHECK: If no results and we haven't retried yet, try page 1.
         if (!retryWithPage1) {
@@ -61,52 +68,76 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center px-4 py-12 md:px-8 bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e]">
+    <main className="relative min-h-screen flex flex-col items-center justify-center px-4 py-12 md:px-8 overflow-hidden">
 
-      {/* Initial State: Title & Selector */}
-      {!movie && !loading && (
-        <div className="w-full max-w-4xl text-center space-y-12 animate-fade-in">
-          <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 animate-gradient-x pb-2">
-            Qual gênero você quer assistir hoje?
-          </h1>
-
-          <div className="flex justify-center">
-            <VibeSelector selectedVibe={vibe} onSelectVibe={(id) => fetchRandomMovie(id)} />
-          </div>
-        </div>
+      {/* Dynamic Background */}
+      {movie?.backdrop_path ? (
+        <>
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat fixed"
+            style={{ backgroundImage: `url(https://image.tmdb.org/t/p/original${movie.backdrop_path})` }}
+          />
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+        </>
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e]" />
       )}
 
-      {/* Loading State */}
-      {loading && (
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-purple-500"></div>
-          <p className="text-xl text-white font-medium animate-pulse">Sintonizando sua vibe...</p>
-        </div>
-      )}
+      {/* Content Container - Ensure it's above the background */}
+      <div className="relative z-10 w-full flex flex-col items-center">
 
-      {/* Result State: Single Movie Card */}
-      {movie && !loading && (
-        <div className="w-full max-w-md space-y-8 animate-scale-in">
-          <div className="transform transition-all hover:scale-105 duration-500">
-            <MovieCard movie={movie} />
-          </div>
+        {/* Initial State: Title & Selector */}
+        {!movie && !loading && (
+          <div className="w-full max-w-4xl text-center space-y-12 animate-fade-in">
+            <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 animate-gradient-x pb-4">
+              Qual gênero você quer assistir hoje?
+            </h1>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={() => vibe && fetchRandomMovie(vibe)}
-              className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg shadow-purple-500/30 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2"
-            >
-              🔄 Quero outra sugestão
-            </button>
-            <button
-              onClick={handleReset}
-              className="flex-1 bg-white/10 hover:bg-white/20 text-white font-bold py-4 px-6 rounded-xl backdrop-blur-sm transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2"
-            >
-              🔙 Escolher outro Gênero
-            </button>
+            <div className="flex justify-center">
+              <VibeSelector selectedVibe={vibe} onSelectVibe={(id) => fetchRandomMovie(id)} />
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <div className="flex flex-col items-center space-y-4">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-purple-500"></div>
+            <p className="text-xl text-white font-medium animate-pulse">Sintonizando sua vibe...</p>
+          </div>
+        )}
+
+        {/* Result State: Single Movie Card */}
+        {movie && !loading && (
+          <div className="w-full max-w-md space-y-8 animate-scale-in">
+            <div className="transform transition-all hover:scale-105 duration-500">
+              <MovieCard movie={movie} />
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={() => vibe && fetchRandomMovie(vibe)}
+                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg shadow-purple-500/30 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2"
+              >
+                🔄 Quero outra sugestão
+              </button>
+              <button
+                onClick={handleReset}
+                className="flex-1 bg-white/10 hover:bg-white/20 text-white font-bold py-4 px-6 rounded-xl backdrop-blur-sm transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2"
+              >
+                🔙 Escolher outro Gênero
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <footer className="relative z-10 mt-12 text-center">
+        <p className="text-sm text-gray-500">
+          Feito com 💜 para os amantes de cinema
+        </p>
+      </footer>
 
     </main>
   );

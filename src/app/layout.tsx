@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -17,6 +17,10 @@ export const metadata: Metadata = {
   description: "Descubra filmes baseados no seu humor",
 };
 
+export const viewport: Viewport = {
+  themeColor: "#0f0f0f",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -26,9 +30,11 @@ export default function RootLayout({
     <html lang="pt-BR" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
         {children}
       </body>
     </html>
   );
 }
+
