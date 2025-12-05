@@ -146,9 +146,11 @@ export default function Home() {
         <p className="text-sm text-gray-500">
           Feito com 💜 para os amantes de cinema
         </p>
-        <a href="/favoritos" className="hidden md:inline-flex items-center gap-2 px-6 py-2 rounded-full bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 transition-all hover:scale-105 active:scale-95 font-medium backdrop-blur-sm">
-          ❤️ Meus Favoritos
-        </a>
+        {!movie && (
+          <a href="/favoritos" className="hidden md:inline-flex items-center gap-2 px-6 py-2 rounded-full bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 transition-all hover:scale-105 active:scale-95 font-medium backdrop-blur-sm">
+            ❤️ Meus Favoritos
+          </a>
+        )}
       </footer>
 
     </main>
