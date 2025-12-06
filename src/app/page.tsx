@@ -155,12 +155,7 @@ export default function Home() {
         {!movie && !loading && (
           <div className="w-full max-w-5xl text-center space-y-8 animate-fade-in relative">
 
-            {/* Mobile Favorites Link */}
-            <div className="md:hidden flex justify-center mb-4">
-              <a href="/favoritos" className="flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-white/10 px-4 py-2 rounded-full backdrop-blur-md border border-white/10 hover:bg-white/20">
-                ❤️ Meus Favoritos
-              </a>
-            </div>
+
 
             <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 animate-gradient-x pb-4">
               Qual gênero você quer assistir hoje?
@@ -196,6 +191,13 @@ export default function Home() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Mobile Favorites Link (Bottom) */}
+            <div className="w-full flex justify-center mt-8 mb-8 md:hidden">
+              <a href="/favoritos" className="px-6 py-3 rounded-full bg-purple-600/20 border border-purple-500/50 text-white font-medium flex items-center gap-2 hover:bg-purple-600/30 transition-all">
+                ❤️ Meus Favoritos
+              </a>
             </div>
 
           </div>
