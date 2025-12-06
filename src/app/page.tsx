@@ -2,28 +2,95 @@
 
 import { useState } from 'react';
 import { MovieCard, Movie } from '@/components/MovieCard';
-import { VibeSelector } from '@/components/VibeSelector';
 
 const API_KEY = '70e97a15d2253fb7336781191814b5f6';
 
+// --- Data Structures ---
+
+const standardGenres = [
+  { id: 28, name: "💥 Ação" },
+  { id: 12, name: "🤠 Aventura" },
+  { id: 16, name: "🎨 Animação" },
+  { id: 35, name: "🤣 Comédia" },
+  { id: 80, name: "🕵️‍♂️ Crime" },
+  { id: 99, name: "📖 Documentário" },
+  { id: 18, name: "🎭 Drama" },
+  { id: 10751, name: "👨‍👩‍👧‍👦 Família" },
+  { id: 14, name: "🧙‍♂️ Fantasia" },
+  { id: 36, name: "📜 História" },
+  { id: 27, name: "👻 Terror" },
+  { id: 10402, name: "🎵 Música" },
+  { id: 9648, name: "🔎 Mistério" },
+  { id: 10749, name: "💘 Romance" },
+  { id: 878, name: "👽 Sci-Fi" },
+  { id: 53, name: "👀 Suspense" },
+  { id: 10752, name: "⚔️ Guerra" },
+  { id: 37, name: "🌵 Faroeste" }
+];
+
+const specialCollections = [
+  { name: "🧟 Zumbis", type: "keyword", value: "12377" },
+  { name: "🦸 Super-heróis", type: "keyword", value: "9715" },
+  { name: "🔰 Animes", type: "custom", value: "&with_genres=16&with_original_language=ja" },
+  { name: "📼 Anos 80", type: "custom", value: "&primary_release_date.gte=1980-01-01&primary_release_date.lte=1989-12-31" },
+  { name: "🧠 Fatos Reais", type: "keyword", value: "9672" },
+  { name: "🧚 Studio Ghibli", type: "custom", value: "&with_companies=10342" },
+  { name: "🩸 Vampiros", type: "keyword", value: "3133" },
+  { name: "⏳ Viagem no Tempo", type: "keyword", value: "4385" },
+  { name: "🌪️ Desastre", type: "keyword", value: "4414" },
+  { name: "🏆 Aclamados", type: "custom", value: "&vote_average.gte=8&vote_count.gte=300" }
+];
+
+// Helper type for our categories
+type Category =
+  | { type: 'standard'; id: number; name: string }
+  | { type: 'keyword'; value: string; name: string }
+  | { type: 'custom'; value: string; name: string };
+
 export default function Home() {
-  const [vibe, setVibe] = useState<number | null>(null);
+  // We'll store the selected category name or ID to show what's active, 
+  // but for the fetch logic we pass the whole object.
+  const [activeCategory, setActiveCategory] = useState<string | number | null>(null);
   const [movie, setMovie] = useState<Movie | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const fetchRandomMovie = async (genreId: number, retryWithPage1 = false) => {
+  // We need to store the last selected category object to allow "Retry" functionality
+  const [lastSelectedCategory, setLastSelectedCategory] = useState<Category | null>(null);
+
+  const asianLanguages = "ja,zh,ko,th,cn";
+
+  const fetchRandomMovie = async (category: Category, retryWithPage1 = false) => {
     setLoading(true);
-    setVibe(genreId);
+    setActiveCategory(category.type === 'standard' ? category.id : category.name);
+    setLastSelectedCategory(category);
 
     try {
-      console.log("Buscando gênero ID:", genreId);
+      console.log("Buscando categoria:", category.name);
 
       // 1. Random Page Logic
-      // If retrying, force page 1. Otherwise, random 1-20.
       const randomPage = retryWithPage1 ? 1 : Math.floor(Math.random() * 20) + 1;
 
       // 2. Construct URL
-      const url = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&language=pt-BR&sort_by=popularity.desc&include_adult=false&with_genres=${genreId}&page=${randomPage}`;
+      let url = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&language=pt-BR&sort_by=popularity.desc&include_adult=false&page=${randomPage}`;
+
+      // Apply filter based on type
+      if (category.type === 'keyword') {
+        url += `&with_keywords=${category.value}`;
+      } else if (category.type === 'custom') {
+        url += category.value;
+      } else {
+        // Standard Genre
+        url += `&with_genres=${category.id}`;
+      }
+
+      // 3. Language & Quality Filters
+      // Block Asian languages for non-anime categories to avoid untranslated titles
+      if (category.name !== "🔰 Animes" && category.name !== "🧚 Studio Ghibli") {
+        url += `&without_original_language=${asianLanguages}`;
+      }
+
+      // Always apply quality filter
+      url += `&vote_count.gte=300`;
 
       console.log("URL Gerada:", url);
 
@@ -42,11 +109,11 @@ export default function Home() {
 
         setMovie(detailedMovie);
       } else {
-        // SAFETY CHECK: If no results and we haven't retried yet, try page 1.
+        // SAFETY CHECK
         if (!retryWithPage1) {
           console.warn(`Nenhum resultado na página ${randomPage}. Tentando página 1...`);
-          await fetchRandomMovie(genreId, true); // Recursive call with force page 1
-          return; // Exit this execution context
+          await fetchRandomMovie(category, true);
+          return;
         }
         console.error("Nenhum filme encontrado mesmo na página 1.");
         setMovie(null);
@@ -55,16 +122,14 @@ export default function Home() {
       console.error('Erro ao buscar filme:', error);
       setMovie(null);
     } finally {
-      // Only stop loading if we are not retrying (or if retry finished)
-      // The recursive call handles its own loading state, but we need to ensure we don't turn it off prematurely if we are about to recurse.
-      // Actually, since await fetchRandomMovie waits for the recursion, we can set loading false here safely.
       setLoading(false);
     }
   };
 
   const handleReset = () => {
-    setVibe(null);
+    setActiveCategory(null);
     setMovie(null);
+    setLastSelectedCategory(null);
   };
 
   return (
@@ -83,13 +148,12 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e]" />
       )}
 
-      {/* Content Container - Ensure it's above the background */}
+      {/* Content Container */}
       <div className="relative z-10 w-full flex flex-col items-center">
 
-        {/* Initial State: Title & Selector */}
+        {/* Initial State: Title & Selectors */}
         {!movie && !loading && (
-          <div className="w-full max-w-4xl text-center space-y-12 animate-fade-in relative">
-
+          <div className="w-full max-w-5xl text-center space-y-8 animate-fade-in relative">
 
             {/* Mobile Favorites Link */}
             <div className="md:hidden flex justify-center mb-4">
@@ -102,9 +166,38 @@ export default function Home() {
               Qual gênero você quer assistir hoje?
             </h1>
 
-            <div className="flex justify-center">
-              <VibeSelector selectedVibe={vibe} onSelectVibe={(id) => fetchRandomMovie(id)} />
+            {/* BLOCK 1: Standard Genres */}
+            <div className="w-full">
+              <p className="text-gray-400 uppercase text-xs tracking-widest mb-4">Gêneros</p>
+              <div className="flex flex-wrap justify-center gap-3">
+                {standardGenres.map((genre) => (
+                  <button
+                    key={genre.id}
+                    onClick={() => fetchRandomMovie({ type: 'standard', ...genre })}
+                    className="rounded-full px-5 py-2 text-base font-medium transition-all duration-300 transform hover:scale-105 bg-white/10 text-gray-200 hover:bg-purple-600 hover:text-white backdrop-blur-md border border-white/10 hover:border-purple-500 hover:shadow-lg hover:shadow-purple-500/30"
+                  >
+                    {genre.name}
+                  </button>
+                ))}
+              </div>
             </div>
+
+            {/* BLOCK 2: Special Collections */}
+            <div className="w-full mt-8">
+              <p className="text-yellow-500/80 uppercase text-xs tracking-widest mb-4">Coleções Especiais ✨</p>
+              <div className="flex flex-wrap justify-center gap-3">
+                {specialCollections.map((collection) => (
+                  <button
+                    key={collection.name}
+                    onClick={() => fetchRandomMovie(collection as Category)}
+                    className="rounded-full px-5 py-2 text-base font-medium transition-all duration-300 transform hover:scale-105 border border-yellow-500/30 bg-yellow-500/10 text-gray-200 hover:bg-yellow-500 hover:text-black hover:shadow-lg hover:shadow-yellow-500/50"
+                  >
+                    {collection.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
           </div>
         )}
 
@@ -125,7 +218,7 @@ export default function Home() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
-                onClick={() => vibe && fetchRandomMovie(vibe)}
+                onClick={() => lastSelectedCategory && fetchRandomMovie(lastSelectedCategory)}
                 className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg shadow-purple-500/30 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2"
               >
                 🔄 Quero outra sugestão
