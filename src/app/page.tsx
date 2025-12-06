@@ -36,7 +36,7 @@ const specialCollections = [
   { name: "🧠 Fatos Reais", type: "keyword", value: "9672" },
   { name: "🧚 Studio Ghibli", type: "custom", value: "&with_companies=10342" },
   { name: "🩸 Vampiros", type: "keyword", value: "3133" },
-  { name: "⏳ Viagem no Tempo", type: "keyword", value: "4385" },
+  { name: "☢️ Pós-Apocalíptico", type: "keyword", value: "4458" },
   { name: "🌪️ Desastre", type: "keyword", value: "4414" },
   { name: "🏆 Aclamados", type: "custom", value: "&vote_average.gte=8&vote_count.gte=300" }
 ];
